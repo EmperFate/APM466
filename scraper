@@ -1,0 +1,40 @@
+
+
+
+
+
+
+
+import requests
+from bs4 import BeautifulSoup
+
+def scraper(url, url_data):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, "html.parser")
+    isin_row = soup.find("td", text=lambda t: t and "isin" in t.lower())
+    isin_value = isin_row.find_next_sibling("td").text.strip()
+    coupon_rows = soup.find_all("td", text=lambda t: t and "coupon" in t.lower())
+    second_coupon_row = coupon_rows[1]
+    coupon_value_cell = second_coupon_row.find_next_sibling("td").text.strip()
+    coupon_value = float(coupon_value_cell.replace('%', '')) / 100
+    issue_row = soup.find("td", text=lambda t: t and "issue date" in t.lower())
+    issue_value = issue_row.find_next_sibling("td").text.strip()
+    maturity_row = soup.find("td", text=lambda t: t and "maturity date" in t.lower())
+    maturity_value = maturity_row.find_next_sibling("td").text.strip()
+    print(f'{coupon_value},{isin_value},{issue_value},{maturity_value}')
+        
+    response = requests.get(url_data)
+    for entry in response.json():
+        if entry["Date"] in target_dates:
+            print(f"{entry['Close']}")
+
+
+
+target_dates = ["2025-01-06 00:00", "2025-01-07 00:00", "2025-01-08 00:00",
+               "2025-01-09 00:00","2025-01-10 00:00","2025-01-13 00:00",
+               "2025-01-14 00:00","2025-01-15 00:00", "2025-01-16 00:00",
+               "2025-01-17 00:00"]
+
+scraper("https://markets.businessinsider.com/bonds/canadacd-bonds_202030_series_l443-bond-2030-ca135087l443?miRedirects=1",
+       "https://markets.businessinsider.com/Ajax/Chart_GetChartData?instrumentType=Bond&tkData=1,57501684,1330,184&from=20241203&to=20250203")
+
